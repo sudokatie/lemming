@@ -1,36 +1,73 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Lemming
 
-## Getting Started
+Browser-based puzzle game where tiny creatures march toward certain doom unless you intervene. Assign abilities. Save lives. Question the ethics of rodent labor exploitation.
 
-First, run the development server:
+## Why This Exists?
+
+The original Lemmings (1991) was a masterpiece of puzzle design. Tiny pixel creatures, mindlessly marching, and you with godlike powers to dig, build, and block their way to safety.
+
+Modern "remakes" are mobile-first, ad-supported, and have lost the charm. This is an attempt to bring back the pure puzzle experience - no ads, no microtransactions, just you versus the cliff.
+
+## Features
+
+- 5 handcrafted levels (more coming)
+- 3 abilities: Blocker, Builder, Digger
+- Pixel-perfect terrain collision
+- Destructible terrain (dig through dirt, not steel)
+- Clean, no-frills UI
+- Keyboard shortcuts for speed
+
+## Quick Start
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000 and start saving lemmings.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Controls
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Key | Action |
+|-----|--------|
+| 1 | Select Blocker |
+| 2 | Select Builder |
+| 3 | Select Digger |
+| P | Pause/Resume |
+| R | Restart level |
+| ESC | Cancel selection |
+| Click | Assign ability to lemming |
 
-## Learn More
+## Abilities
 
-To learn more about Next.js, take a look at the following resources:
+**Blocker** - Stops walking, becomes a living wall. Other lemmings turn around when they hit a blocker. Permanent - can't be un-assigned.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+**Builder** - Places 12 diagonal stairs in the direction they're facing. Good for bridging gaps. Returns to walking when done.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+**Digger** - Digs straight down through terrain. Stops at steel or empty space. Good for creating shortcuts.
 
-## Deploy on Vercel
+## Tech Stack
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- Next.js 14 with TypeScript
+- HTML5 Canvas for rendering
+- Tailwind CSS for UI
+- Jest for testing
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Philosophy
+
+1. Puzzles should require thought, not reflexes
+2. Simple mechanics, emergent complexity
+3. Every level should be solvable (and fun to solve)
+4. Failure should teach, not punish
+
+## License
+
+MIT
+
+## Author
+
+Katie
+
+---
+
+*They march. You think. They survive. Hopefully.*
