@@ -1,4 +1,6 @@
 import { Level } from './types';
+
+export type { Level };
 import { TERRAIN_EMPTY, TERRAIN_DIRT, TERRAIN_STEEL } from './constants';
 
 // Helper to create terrain filled with a value
