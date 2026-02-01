@@ -36,6 +36,7 @@ Open http://localhost:3000 and start saving lemmings.
 | P | Pause/Resume |
 | R | Restart level |
 | ESC | Cancel selection |
+| Right-click | Cancel selection |
 | Click | Assign ability to lemming |
 
 ## Abilities

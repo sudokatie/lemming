@@ -33,6 +33,7 @@ export function GameCanvas() {
   const [levelName, setLevelName] = useState('');
   const [totalLemmings, setTotalLemmings] = useState(0);
   const [requiredSaved, setRequiredSaved] = useState(0);
+  const [isHoveringLemming, setIsHoveringLemming] = useState(false);
 
   const updateStateFromGame = useCallback(() => {
     if (!gameRef.current) return;
@@ -122,6 +123,21 @@ export function GameCanvas() {
     setGameState(prev => ({ ...prev, status: 'title' }));
   }, []);
 
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!gameRef.current || !canvasRef.current) return;
+    
+    const canvas = canvasRef.current;
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    
+    const x = (e.clientX - rect.left) * scaleX;
+    const y = (e.clientY - rect.top) * scaleY;
+    
+    const lemming = gameRef.current.getLemmingAt(x, y);
+    setIsHoveringLemming(lemming !== null);
+  }, []);
+
   useEffect(() => {
     if (!canvasRef.current) return;
 
@@ -181,7 +197,10 @@ export function GameCanvas() {
           ref={canvasRef}
           width={CANVAS_WIDTH}
           height={GAME_HEIGHT}
-          className="border-2 border-gray-700 rounded cursor-crosshair"
+          onMouseMove={handleMouseMove}
+          className={`border-2 border-gray-700 rounded ${
+            isHoveringLemming && gameState.selectedAbility ? 'cursor-pointer' : 'cursor-crosshair'
+          }`}
         />
 
         {gameState.status === 'paused' && (
