@@ -6,6 +6,7 @@ export class Input {
   private canvas: HTMLCanvasElement | null;
   private boundHandleKeydown: (e: KeyboardEvent) => void;
   private boundHandleClick: (e: MouseEvent) => void;
+  private boundHandleContextMenu: (e: MouseEvent) => void;
 
   constructor(callbacks: InputCallbacks) {
     this.callbacks = callbacks;
@@ -13,6 +14,7 @@ export class Input {
     this.canvas = null;
     this.boundHandleKeydown = this.handleKeydown.bind(this);
     this.boundHandleClick = this.handleClick.bind(this);
+    this.boundHandleContextMenu = this.handleContextMenu.bind(this);
 
     // Add keyboard listener
     window.addEventListener('keydown', this.boundHandleKeydown);
@@ -25,15 +27,18 @@ export class Input {
   bindToCanvas(canvas: HTMLCanvasElement): void {
     if (this.canvas) {
       this.canvas.removeEventListener('click', this.boundHandleClick);
+      this.canvas.removeEventListener('contextmenu', this.boundHandleContextMenu);
     }
     this.canvas = canvas;
     this.canvas.addEventListener('click', this.boundHandleClick);
+    this.canvas.addEventListener('contextmenu', this.boundHandleContextMenu);
   }
 
   unbind(): void {
     window.removeEventListener('keydown', this.boundHandleKeydown);
     if (this.canvas) {
       this.canvas.removeEventListener('click', this.boundHandleClick);
+      this.canvas.removeEventListener('contextmenu', this.boundHandleContextMenu);
       this.canvas = null;
     }
   }
@@ -82,6 +87,12 @@ export class Input {
     const y = (e.clientY - rect.top) * scaleY;
 
     this.callbacks.onLemmingClick(x, y);
+  }
+
+  private handleContextMenu(e: MouseEvent): void {
+    e.preventDefault();
+    if (!this.enabled) return;
+    this.callbacks.onCancel();
   }
 
   canvasToGame(clientX: number, clientY: number): Position {
