@@ -1,57 +1,56 @@
 import { Sound } from '../Sound';
 
-// Mock AudioContext
-const mockOscillator = {
-  connect: jest.fn(),
-  start: jest.fn(),
-  stop: jest.fn(),
-  type: 'sine',
-  frequency: {
-    value: 0,
-    setValueAtTime: jest.fn(),
-    exponentialRampToValueAtTime: jest.fn(),
-    linearRampToValueAtTime: jest.fn(),
-  },
-};
-
-const mockGain = {
-  connect: jest.fn(),
-  gain: {
-    value: 0,
-    setValueAtTime: jest.fn(),
-    exponentialRampToValueAtTime: jest.fn(),
-    linearRampToValueAtTime: jest.fn(),
-  },
-};
-
-const mockBufferSource = {
-  buffer: null,
-  connect: jest.fn(),
-  start: jest.fn(),
-};
-
-const mockAudioContext = {
-  currentTime: 0,
-  state: 'running',
-  sampleRate: 44100,
-  resume: jest.fn().mockResolvedValue(undefined),
-  createOscillator: jest.fn(() => ({ ...mockOscillator })),
-  createGain: jest.fn(() => ({ ...mockGain })),
-  createBufferSource: jest.fn(() => ({ ...mockBufferSource })),
-  createBuffer: jest.fn((channels, length, sampleRate) => ({
-    getChannelData: jest.fn(() => new Float32Array(length)),
-  })),
-  destination: {},
-};
-
-// Mock window.AudioContext
-(global as any).window = {
-  AudioContext: jest.fn(() => mockAudioContext),
-};
+let mockAudioContext: any;
 
 describe('Sound System', () => {
   beforeEach(() => {
+    // Reset all mocks
     jest.clearAllMocks();
+    
+    // Create fresh mock AudioContext for each test
+    mockAudioContext = {
+      currentTime: 0,
+      state: 'running',
+      sampleRate: 44100,
+      resume: jest.fn().mockResolvedValue(undefined),
+      createOscillator: jest.fn(() => ({
+        connect: jest.fn(),
+        start: jest.fn(),
+        stop: jest.fn(),
+        type: 'sine',
+        frequency: {
+          value: 0,
+          setValueAtTime: jest.fn(),
+          exponentialRampToValueAtTime: jest.fn(),
+          linearRampToValueAtTime: jest.fn(),
+        },
+      })),
+      createGain: jest.fn(() => ({
+        connect: jest.fn(),
+        gain: {
+          value: 0,
+          setValueAtTime: jest.fn(),
+          exponentialRampToValueAtTime: jest.fn(),
+          linearRampToValueAtTime: jest.fn(),
+        },
+      })),
+      createBufferSource: jest.fn(() => ({
+        buffer: null,
+        connect: jest.fn(),
+        start: jest.fn(),
+      })),
+      createBuffer: jest.fn((channels: number, length: number, sampleRate: number) => ({
+        getChannelData: jest.fn(() => new Float32Array(length)),
+      })),
+      destination: {},
+    };
+    
+    // Mock AudioContext on the actual window object (jsdom provides window)
+    (window as any).AudioContext = jest.fn(() => mockAudioContext);
+    (window as any).webkitAudioContext = jest.fn(() => mockAudioContext);
+    
+    // Reset Sound's cached context so it picks up our mock
+    Sound.resetContext();
     Sound.setEnabled(true);
     Sound.setVolume(0.3);
   });

@@ -50,6 +50,11 @@ class SoundSystem {
     this.enabled = enabled;
   }
 
+  // Reset context (for testing)
+  resetContext(): void {
+    this.context = null;
+  }
+
   isEnabled(): boolean {
     return this.enabled;
   }
