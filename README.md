@@ -14,6 +14,7 @@ Modern "remakes" are mobile-first, ad-supported, and have lost the charm. This i
 - 3 abilities: Blocker, Builder, Digger
 - Pixel-perfect terrain collision
 - Destructible terrain (dig through dirt, not steel)
+- Retro synthesized sound effects (spawns, abilities, saves, wins)
 - Clean, no-frills UI
 - Keyboard shortcuts for speed
 

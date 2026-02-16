@@ -2,6 +2,7 @@ import { GameState, GameStatus, Ability, AbilityCount, Hitbox } from './types';
 import { Level, getLevel, getTotalLevels } from './levels';
 import { Terrain } from './Terrain';
 import { Lemming } from './Lemming';
+import { Sound } from './Sound';
 
 export class Game {
   private state: GameState;
@@ -112,6 +113,7 @@ export class Game {
       this.lemmings.push(lemming);
       this.state.lemmingsOut++;
       this.framesSinceSpawn = 0;
+      Sound.play('spawn');
     }
   }
 
@@ -174,6 +176,7 @@ export class Game {
 
       if (dist < 15) {
         lemming.reachExit();
+        Sound.play('saved');
       }
     }
   }
@@ -211,7 +214,9 @@ export class Game {
 
     if (allDone || timerExpired) {
       const percentage = (savedCount / this.level.totalLemmings) * 100;
-      this.state.status = percentage >= this.level.requiredSaved ? 'won' : 'lost';
+      const won = percentage >= this.level.requiredSaved;
+      this.state.status = won ? 'won' : 'lost';
+      Sound.play(won ? 'levelWin' : 'levelLose');
       return;
     }
 
@@ -222,6 +227,7 @@ export class Game {
 
     if (maxPercentage < this.level.requiredSaved) {
       this.state.status = 'lost';
+      Sound.play('levelLose');
     }
   }
 
@@ -254,6 +260,7 @@ export class Game {
     if (lemming.assignAbility(this.state.selectedAbility)) {
       this.state.abilities[this.state.selectedAbility]--;
       this.state.selectedAbility = null;
+      Sound.play('abilityAssign');
       return true;
     }
     return false;
