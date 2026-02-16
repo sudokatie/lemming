@@ -15,6 +15,7 @@ Modern "remakes" are mobile-first, ad-supported, and have lost the charm. This i
 - Pixel-perfect terrain collision
 - Destructible terrain (dig through dirt, not steel)
 - Retro synthesized sound effects (spawns, abilities, saves, wins)
+- Per-level leaderboard (track best saves and times)
 - Clean, no-frills UI
 - Keyboard shortcuts for speed
 
