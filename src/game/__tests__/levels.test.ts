@@ -16,8 +16,8 @@ describe('Levels', () => {
   });
 
   describe('getTotalLevels', () => {
-    it('returns 5 levels', () => {
-      expect(getTotalLevels()).toBe(5);
+    it('returns 7 levels', () => {
+      expect(getTotalLevels()).toBe(7);
     });
   });
 

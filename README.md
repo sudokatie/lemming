@@ -10,7 +10,7 @@ Modern "remakes" are mobile-first, ad-supported, and have lost the charm. This i
 
 ## Features
 
-- 5 handcrafted levels (more coming)
+- 7 handcrafted levels
 - 3 abilities: Blocker, Builder, Digger
 - Pixel-perfect terrain collision
 - Destructible terrain (dig through dirt, not steel)

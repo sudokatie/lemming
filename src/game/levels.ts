@@ -190,12 +190,86 @@ function createLevel5(): Level {
   };
 }
 
+// Level 6: Split Path - Two routes, need to manage both
+function createLevel6(): Level {
+  const width = 250;
+  const height = 120;
+  const terrain = createTerrain(width, height);
+  
+  // Start platform (center)
+  drawRect(terrain, 100, 40, 150, height - 1, TERRAIN_DIRT);
+  
+  // Left path
+  drawRect(terrain, 0, 70, 60, height - 1, TERRAIN_DIRT);
+  
+  // Right path
+  drawRect(terrain, 190, 70, width - 1, height - 1, TERRAIN_DIRT);
+  
+  // Exit platform (bottom center)
+  drawRect(terrain, 100, 90, 150, height - 1, TERRAIN_DIRT);
+  
+  return {
+    id: 6,
+    name: 'Split Decision',
+    width,
+    height,
+    terrainData: terrain,
+    totalLemmings: 20,
+    requiredSaved: 75,
+    timeLimit: 300,
+    spawnRate: 35,
+    spawnX: 125,
+    spawnY: 20,
+    exitX: 125,
+    exitY: 80,
+    abilities: { blocker: 4, builder: 6, digger: 2 },
+  };
+}
+
+// Level 7: Precision Required - Tight timing
+function createLevel7(): Level {
+  const width = 200;
+  const height = 100;
+  const terrain = createTerrain(width, height);
+  
+  // Staircase down
+  drawRect(terrain, 0, 30, 40, height - 1, TERRAIN_DIRT);
+  drawRect(terrain, 40, 45, 80, height - 1, TERRAIN_DIRT);
+  drawRect(terrain, 80, 60, 120, height - 1, TERRAIN_DIRT);
+  drawRect(terrain, 120, 75, 160, height - 1, TERRAIN_DIRT);
+  drawRect(terrain, 160, 85, width - 1, height - 1, TERRAIN_DIRT);
+  
+  // Steel walls requiring precise building
+  drawRect(terrain, 38, 45, 42, height - 1, TERRAIN_STEEL);
+  drawRect(terrain, 78, 60, 82, height - 1, TERRAIN_STEEL);
+  drawRect(terrain, 118, 75, 122, height - 1, TERRAIN_STEEL);
+  
+  return {
+    id: 7,
+    name: 'Precision',
+    width,
+    height,
+    terrainData: terrain,
+    totalLemmings: 15,
+    requiredSaved: 90,
+    timeLimit: 180,
+    spawnRate: 30,
+    spawnX: 20,
+    spawnY: 10,
+    exitX: 180,
+    exitY: 75,
+    abilities: { blocker: 1, builder: 12, digger: 0 },
+  };
+}
+
 export const LEVELS: Level[] = [
   createLevel1(),
   createLevel2(),
   createLevel3(),
   createLevel4(),
   createLevel5(),
+  createLevel6(),
+  createLevel7(),
 ];
 
 export function getLevel(id: number): Level | undefined {
