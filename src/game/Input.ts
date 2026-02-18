@@ -7,6 +7,7 @@ export class Input {
   private boundHandleKeydown: (e: KeyboardEvent) => void;
   private boundHandleClick: (e: MouseEvent) => void;
   private boundHandleContextMenu: (e: MouseEvent) => void;
+  private boundHandleTouchEnd: (e: TouchEvent) => void;
 
   constructor(callbacks: InputCallbacks) {
     this.callbacks = callbacks;
@@ -15,6 +16,7 @@ export class Input {
     this.boundHandleKeydown = this.handleKeydown.bind(this);
     this.boundHandleClick = this.handleClick.bind(this);
     this.boundHandleContextMenu = this.handleContextMenu.bind(this);
+    this.boundHandleTouchEnd = this.handleTouchEnd.bind(this);
 
     // Add keyboard listener
     window.addEventListener('keydown', this.boundHandleKeydown);
@@ -28,10 +30,12 @@ export class Input {
     if (this.canvas) {
       this.canvas.removeEventListener('click', this.boundHandleClick);
       this.canvas.removeEventListener('contextmenu', this.boundHandleContextMenu);
+      this.canvas.removeEventListener('touchend', this.boundHandleTouchEnd);
     }
     this.canvas = canvas;
     this.canvas.addEventListener('click', this.boundHandleClick);
     this.canvas.addEventListener('contextmenu', this.boundHandleContextMenu);
+    this.canvas.addEventListener('touchend', this.boundHandleTouchEnd, { passive: false });
   }
 
   unbind(): void {
@@ -39,6 +43,7 @@ export class Input {
     if (this.canvas) {
       this.canvas.removeEventListener('click', this.boundHandleClick);
       this.canvas.removeEventListener('contextmenu', this.boundHandleContextMenu);
+      this.canvas.removeEventListener('touchend', this.boundHandleTouchEnd);
       this.canvas = null;
     }
   }
@@ -106,5 +111,23 @@ export class Input {
       x: (clientX - rect.left) * scaleX,
       y: (clientY - rect.top) * scaleY,
     };
+  }
+
+  private handleTouchEnd(e: TouchEvent): void {
+    if (!this.enabled || !this.canvas) return;
+    if (e.changedTouches.length !== 1) return;
+    
+    e.preventDefault();
+    
+    const touch = e.changedTouches[0];
+    const rect = this.canvas.getBoundingClientRect();
+    const scaleX = this.canvas.width / rect.width;
+    const scaleY = this.canvas.height / rect.height;
+
+    const x = (touch.clientX - rect.left) * scaleX;
+    const y = (touch.clientY - rect.top) * scaleY;
+
+    // Touch on canvas = click on lemming
+    this.callbacks.onLemmingClick(x, y);
   }
 }
