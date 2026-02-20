@@ -9,6 +9,7 @@ import { Ability } from '@/game/types';
 import { HUD } from './HUD';
 import { AbilityPanel } from './AbilityPanel';
 import { TitleScreen } from './TitleScreen';
+import { Music } from '@/game/Music';
 import { ResultScreen } from './ResultScreen';
 import { PauseMenu } from './PauseMenu';
 
@@ -176,6 +177,25 @@ export function GameCanvas() {
       input.unbind();
     };
   }, [handleAbilitySelect, handlePause, handleRestart, updateStateFromGame]);
+
+  // Switch music track based on game status
+  useEffect(() => {
+    switch (gameState.status) {
+      case 'title':
+      case 'paused':
+        Music.play('menu');
+        break;
+      case 'playing':
+        Music.play('gameplay');
+        break;
+      case 'won':
+        Music.play('victory');
+        break;
+      case 'lost':
+        Music.play('gameover');
+        break;
+    }
+  }, [gameState.status]);
 
   if (gameState.status === 'title') {
     return <TitleScreen onStart={startLevel} />;
