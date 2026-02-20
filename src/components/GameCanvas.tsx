@@ -10,6 +10,7 @@ import { HUD } from './HUD';
 import { AbilityPanel } from './AbilityPanel';
 import { TitleScreen } from './TitleScreen';
 import { ResultScreen } from './ResultScreen';
+import { PauseMenu } from './PauseMenu';
 
 export function GameCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -204,12 +205,11 @@ export function GameCanvas() {
         />
 
         {gameState.status === 'paused' && (
-          <div className="absolute inset-0 bg-black/70 flex items-center justify-center">
-            <div className="text-center">
-              <h2 className="text-3xl font-bold text-white mb-4">PAUSED</h2>
-              <p className="text-gray-400">Press P to resume</p>
-            </div>
-          </div>
+          <PauseMenu
+            onResume={handlePause}
+            onRestart={handleRestart}
+            onMenu={handleMenu}
+          />
         )}
 
         {(gameState.status === 'won' || gameState.status === 'lost') && (
