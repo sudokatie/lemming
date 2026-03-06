@@ -74,6 +74,14 @@ export interface GameState {
   abilities: AbilityCount;
   selectedAbility: Ability | null;
   selectedLemming: number | null;
+  // Daily challenge
+  dailyMode: boolean;
+  dailyProgress?: {
+    current: number;
+    total: number;
+    totalSaved: number;
+    totalRequired: number;
+  };
 }
 
 // Hitbox rectangle

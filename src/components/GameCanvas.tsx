@@ -12,6 +12,7 @@ import { TitleScreen } from './TitleScreen';
 import { Music } from '@/game/Music';
 import { ResultScreen } from './ResultScreen';
 import { PauseMenu } from './PauseMenu';
+import { DailyComplete } from './DailyComplete';
 
 export function GameCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -30,7 +31,16 @@ export function GameCanvas() {
     timeRemaining: 0,
     abilities: { blocker: 0, builder: 0, digger: 0 },
     selectedAbility: null as Ability | null,
+    dailyMode: false,
+    dailyProgress: undefined as { current: number; total: number; totalSaved: number; totalRequired: number } | undefined,
   });
+
+  const [dailyResult, setDailyResult] = useState<{
+    totalSaved: number;
+    totalRequired: number;
+    levelsCompleted: number;
+    timeSeconds: number;
+  } | null>(null);
 
   const [levelName, setLevelName] = useState('');
   const [totalLemmings, setTotalLemmings] = useState(0);
@@ -51,6 +61,8 @@ export function GameCanvas() {
       timeRemaining: state.timeRemaining,
       abilities: { ...state.abilities },
       selectedAbility: state.selectedAbility,
+      dailyMode: state.dailyMode,
+      dailyProgress: state.dailyProgress,
     });
 
     if (level) {
@@ -112,10 +124,19 @@ export function GameCanvas() {
   }, [updateStateFromGame]);
 
   const handleNextLevel = useCallback(() => {
-    if (!gameRef.current) return;
-    const current = gameRef.current.getState().currentLevel;
-    startLevel(current + 1);
-  }, [startLevel]);
+    if (!gameRef.current || !rendererRef.current) return;
+    
+    if (gameRef.current.isDailyMode()) {
+      // In daily mode, use game's nextLevel which handles daily progression
+      gameRef.current.nextLevel();
+      rendererRef.current.resetTerrain();
+      lastTimeRef.current = 0;
+      updateStateFromGame();
+    } else {
+      const current = gameRef.current.getState().currentLevel;
+      startLevel(current + 1);
+    }
+  }, [startLevel, updateStateFromGame]);
 
   const handleMenu = useCallback(() => {
     if (rafRef.current) {
@@ -123,6 +144,27 @@ export function GameCanvas() {
       rafRef.current = 0;
     }
     setGameState(prev => ({ ...prev, status: 'title' }));
+  }, []);
+
+  const handleStartDaily = useCallback(() => {
+    if (!gameRef.current || !rendererRef.current) return;
+
+    gameRef.current.startDaily();
+    rendererRef.current.resetTerrain();
+    lastTimeRef.current = 0;
+    updateStateFromGame();
+
+    if (!rafRef.current) {
+      rafRef.current = requestAnimationFrame(gameLoop);
+    }
+  }, [gameLoop, updateStateFromGame]);
+
+  const handleDailyClose = useCallback(() => {
+    setDailyResult(null);
+    if (gameRef.current) {
+      gameRef.current.exitDaily();
+    }
+    setGameState(prev => ({ ...prev, status: 'title', dailyMode: false }));
   }, []);
 
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -166,6 +208,15 @@ export function GameCanvas() {
 
     input.bindToCanvas(canvas);
 
+    game.onDailyComplete = (result) => {
+      setDailyResult({
+        totalSaved: result.totalSaved,
+        totalRequired: result.totalRequired,
+        levelsCompleted: result.levelsCompleted,
+        timeSeconds: result.timeSeconds,
+      });
+    };
+
     gameRef.current = game;
     rendererRef.current = renderer;
     inputRef.current = input;
@@ -198,7 +249,7 @@ export function GameCanvas() {
   }, [gameState.status]);
 
   if (gameState.status === 'title') {
-    return <TitleScreen onStart={startLevel} />;
+    return <TitleScreen onStart={startLevel} onStartDaily={handleStartDaily} />;
   }
 
   return (
@@ -211,6 +262,8 @@ export function GameCanvas() {
         required={requiredSaved}
         total={totalLemmings}
         out={gameState.lemmingsOut}
+        dailyMode={gameState.dailyMode}
+        dailyProgress={gameState.dailyProgress}
       />
 
       <div className="relative">
@@ -253,6 +306,18 @@ export function GameCanvas() {
         onRestart={handleRestart}
         isPaused={gameState.status === 'paused'}
       />
+
+      {/* Daily Complete Modal */}
+      {dailyResult && (
+        <DailyComplete
+          totalSaved={dailyResult.totalSaved}
+          totalRequired={dailyResult.totalRequired}
+          levelsCompleted={dailyResult.levelsCompleted}
+          timeSeconds={dailyResult.timeSeconds}
+          onSubmit={() => {}}
+          onClose={handleDailyClose}
+        />
+      )}
     </div>
   );
 }

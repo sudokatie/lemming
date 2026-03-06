@@ -6,6 +6,12 @@ interface HUDProps {
   required: number;
   total: number;
   out: number;
+  dailyMode?: boolean;
+  dailyProgress?: {
+    current: number;
+    total: number;
+    totalSaved: number;
+  };
 }
 
 export function HUD({
@@ -16,6 +22,8 @@ export function HUD({
   required,
   total,
   out,
+  dailyMode,
+  dailyProgress,
 }: HUDProps) {
   const minutes = Math.floor(timeRemaining / 60);
   const seconds = Math.floor(timeRemaining % 60);
@@ -28,8 +36,18 @@ export function HUD({
   return (
     <div className="w-full max-w-[800px] bg-gray-800 px-4 py-2 rounded flex items-center justify-between text-sm">
       <div className="flex items-center gap-4">
-        <span className="text-gray-400">Level {levelNumber}:</span>
-        <span className="text-white font-medium">{levelName}</span>
+        {dailyMode && dailyProgress ? (
+          <>
+            <span className="text-green-400 font-medium">Daily {dailyProgress.current}/{dailyProgress.total}</span>
+            <span className="text-gray-500">|</span>
+            <span className="text-green-400">Total: {dailyProgress.totalSaved}</span>
+          </>
+        ) : (
+          <>
+            <span className="text-gray-400">Level {levelNumber}:</span>
+            <span className="text-white font-medium">{levelName}</span>
+          </>
+        )}
       </div>
 
       <div className="flex items-center gap-6">

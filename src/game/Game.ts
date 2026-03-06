@@ -3,6 +3,7 @@ import { Level, getLevel, getTotalLevels } from './levels';
 import { Terrain } from './Terrain';
 import { Lemming } from './Lemming';
 import { Sound } from './Sound';
+import { getDailyLevelIds, DailyLeaderboard, todayString, generateShareCode } from './Daily';
 
 export class Game {
   private state: GameState;
@@ -11,6 +12,23 @@ export class Game {
   private level: Level | null;
   private framesSinceSpawn: number;
   private lastFrameTime: number;
+
+  // Daily challenge state
+  private dailyMode: boolean = false;
+  private dailyLevels: number[] = [];
+  private dailyLevelIndex: number = 0;
+  private dailyTotalSaved: number = 0;
+  private dailyTotalRequired: number = 0;
+  private dailyStartTime: number = 0;
+
+  // Callbacks
+  onDailyComplete?: (result: {
+    totalSaved: number;
+    totalRequired: number;
+    levelsCompleted: number;
+    timeSeconds: number;
+    shareCode: string;
+  }) => void;
 
   constructor() {
     this.state = this.createInitialState();
@@ -32,11 +50,24 @@ export class Game {
       abilities: { blocker: 0, builder: 0, digger: 0 },
       selectedAbility: null,
       selectedLemming: null,
+      dailyMode: false,
     };
   }
 
   getState(): GameState {
-    return this.state;
+    const state = { ...this.state };
+    state.dailyMode = this.dailyMode;
+    
+    if (this.dailyMode) {
+      state.dailyProgress = {
+        current: this.dailyLevelIndex + 1,
+        total: this.dailyLevels.length,
+        totalSaved: this.dailyTotalSaved + this.state.lemmingsSaved,
+        totalRequired: this.dailyTotalRequired,
+      };
+    }
+    
+    return state;
   }
 
   getTerrain(): Terrain | null {
@@ -72,6 +103,7 @@ export class Game {
       abilities: { ...level.abilities },
       selectedAbility: null,
       selectedLemming: null,
+      dailyMode: this.dailyMode,
     };
   }
 
@@ -302,10 +334,75 @@ export class Game {
   }
 
   nextLevel(): void {
-    const next = this.state.currentLevel + 1;
-    if (next <= getTotalLevels()) {
-      this.loadLevel(next);
+    if (this.dailyMode) {
+      // In daily mode, advance to next daily level
+      this.dailyTotalSaved += this.state.lemmingsSaved;
+      if (this.level) {
+        this.dailyTotalRequired += this.level.requiredSaved;
+      }
+      this.dailyLevelIndex++;
+      
+      if (this.dailyLevelIndex < this.dailyLevels.length) {
+        this.loadLevel(this.dailyLevels[this.dailyLevelIndex]);
+      } else {
+        // Daily complete
+        const timeSeconds = Math.floor((Date.now() - this.dailyStartTime) / 1000);
+        const shareCode = generateShareCode(todayString(), this.dailyTotalSaved, this.dailyLevels.length);
+        
+        this.onDailyComplete?.({
+          totalSaved: this.dailyTotalSaved,
+          totalRequired: this.dailyTotalRequired,
+          levelsCompleted: this.dailyLevels.length,
+          timeSeconds,
+          shareCode,
+        });
+      }
+    } else {
+      const next = this.state.currentLevel + 1;
+      if (next <= getTotalLevels()) {
+        this.loadLevel(next);
+      }
     }
+  }
+
+  /** Start a daily challenge */
+  startDaily(): void {
+    this.dailyMode = true;
+    this.dailyLevels = getDailyLevelIds(getTotalLevels());
+    this.dailyLevelIndex = 0;
+    this.dailyTotalSaved = 0;
+    this.dailyTotalRequired = 0;
+    this.dailyStartTime = Date.now();
+    
+    this.loadLevel(this.dailyLevels[0]);
+  }
+
+  /** Exit daily mode */
+  exitDaily(): void {
+    this.dailyMode = false;
+    this.dailyLevels = [];
+    this.dailyLevelIndex = 0;
+    this.dailyTotalSaved = 0;
+    this.dailyTotalRequired = 0;
+    
+    this.state = this.createInitialState();
+  }
+
+  /** Submit daily score */
+  submitDailyScore(name: string): number | null {
+    const timeSeconds = Math.floor((Date.now() - this.dailyStartTime) / 1000);
+    return DailyLeaderboard.recordScore(
+      name,
+      this.dailyTotalSaved,
+      this.dailyTotalRequired,
+      this.dailyLevels.length,
+      timeSeconds
+    );
+  }
+
+  /** Check if in daily mode */
+  isDailyMode(): boolean {
+    return this.dailyMode;
   }
 
   prevLevel(): void {
