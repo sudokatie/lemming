@@ -4,6 +4,7 @@ import { Terrain } from './Terrain';
 import { Lemming } from './Lemming';
 import { Sound } from './Sound';
 import { getDailyLevelIds, DailyLeaderboard, todayString, generateShareCode } from './Daily';
+import { Replay, ReplayData, ReplayFrame } from './Replay';
 
 export class Game {
   private state: GameState;
@@ -21,6 +22,11 @@ export class Game {
   private dailyTotalRequired: number = 0;
   private dailyStartTime: number = 0;
 
+  // Replay state
+  private replay: Replay = new Replay();
+  private replayMode: boolean = false;
+  private replayData: ReplayData | null = null;
+
   // Callbacks
   onDailyComplete?: (result: {
     totalSaved: number;
@@ -29,6 +35,7 @@ export class Game {
     timeSeconds: number;
     shareCode: string;
   }) => void;
+  onGameOver?: (replayData: ReplayData) => void;
 
   constructor() {
     this.state = this.createInitialState();
@@ -105,6 +112,11 @@ export class Game {
       selectedLemming: null,
       dailyMode: this.dailyMode,
     };
+
+    // Start recording if not in replay mode
+    if (!this.replayMode) {
+      this.replay.startRecording(levelId, this.dailyMode);
+    }
   }
 
   update(deltaTime: number): void {
@@ -249,6 +261,12 @@ export class Game {
       const won = percentage >= this.level.requiredSaved;
       this.state.status = won ? 'won' : 'lost';
       Sound.play(won ? 'levelWin' : 'levelLose');
+      
+      // Stop recording and emit replay data
+      if (!this.replayMode && !this.dailyMode && this.replay.isRecording) {
+        const replayData = this.replay.stopRecording(savedCount, won ? 1 : 0);
+        this.onGameOver?.(replayData);
+      }
       return;
     }
 
@@ -260,6 +278,12 @@ export class Game {
     if (maxPercentage < this.level.requiredSaved) {
       this.state.status = 'lost';
       Sound.play('levelLose');
+      
+      // Stop recording and emit replay data
+      if (!this.replayMode && !this.dailyMode && this.replay.isRecording) {
+        const replayData = this.replay.stopRecording(savedCount, 0);
+        this.onGameOver?.(replayData);
+      }
     }
   }
 
@@ -275,7 +299,14 @@ export class Game {
   // Actions
   selectAbility(ability: Ability): void {
     if (this.state.abilities[ability] <= 0) return;
+    if (this.replayMode) return; // Ignore during replay
+    
     this.state.selectedAbility = ability;
+    
+    // Record for replay
+    if (this.replay.isRecording) {
+      this.replay.recordAbilitySelect(ability);
+    }
   }
 
   clearSelection(): void {
@@ -285,11 +316,17 @@ export class Game {
 
   clickLemming(lemmingId: number): boolean {
     if (!this.state.selectedAbility) return false;
+    if (this.replayMode) return false; // Ignore during replay
 
     const lemming = this.lemmings.find(l => l.getId() === lemmingId);
     if (!lemming) return false;
 
     if (lemming.assignAbility(this.state.selectedAbility)) {
+      // Record for replay
+      if (this.replay.isRecording) {
+        this.replay.recordLemmingClick(lemmingId);
+      }
+      
       this.state.abilities[this.state.selectedAbility]--;
       this.state.selectedAbility = null;
       Sound.play('abilityAssign');
@@ -422,5 +459,62 @@ export class Game {
 
   hasLost(): boolean {
     return this.state.status === 'lost';
+  }
+
+  // Replay methods
+
+  /** Start playing a replay */
+  startReplay(data: ReplayData): void {
+    this.replayMode = true;
+    this.replayData = data;
+    this.loadLevel(data.levelIndex);
+    this.replay.startPlayback(data);
+  }
+
+  /** Stop replay playback */
+  stopReplay(): void {
+    this.replay.stopPlayback();
+    this.replayMode = false;
+    this.replayData = null;
+  }
+
+  /** Check if in replay mode */
+  isReplayMode(): boolean {
+    return this.replayMode;
+  }
+
+  /** Get replay playback progress (0-1) */
+  getReplayProgress(): number {
+    return this.replay.playbackProgress;
+  }
+
+  /** Process replay action (call each frame during replay) */
+  processReplayAction(): void {
+    if (!this.replayMode || !this.replay.isPlaying) return;
+    
+    const action = this.replay.getNextAction();
+    if (action) {
+      if (action.type === 'selectAbility' && action.ability) {
+        // Directly set ability without recording
+        if (this.state.abilities[action.ability] > 0) {
+          this.state.selectedAbility = action.ability;
+        }
+      } else if (action.type === 'clickLemming' && action.lemmingId !== undefined) {
+        // Apply ability directly
+        const lemming = this.lemmings.find(l => l.getId() === action.lemmingId);
+        if (lemming && this.state.selectedAbility) {
+          if (lemming.assignAbility(this.state.selectedAbility)) {
+            this.state.abilities[this.state.selectedAbility]--;
+            this.state.selectedAbility = null;
+            Sound.play('abilityAssign');
+          }
+        }
+      }
+    }
+  }
+
+  /** Check if replay playback is complete */
+  isReplayComplete(): boolean {
+    return this.replay.isPlaybackComplete;
   }
 }
